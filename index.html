@@ -68,8 +68,28 @@
                 lineElm.setAttribute("y2", cellHeightPx)
                 lineElm.setAttribute("stroke", "darksalmon") // fishy
                 lineElm.setAttribute("stroke-width", 2)
+                lineElm.classList.add("genomeMarkerLine")
                 
                 this.elm.append(lineElm)
+            })
+
+            // triangles
+            positionsArray.forEach((x, i) => {
+                var triangleElm = document.createElementNS("http://www.w3.org/2000/svg", "polygon")
+                var genomePos = (x/genomeLength) * bgElmWidth
+                var x0 = (i * cellWidthPx) + cellBorderPx
+                var y0 = cellHeightPx * -1.25
+                var x1 = (i * cellWidthPx) + (1 * cellWidthPx) - cellBorderPx
+                var y1 = cellHeightPx * -1.25
+                var x2 = genomePos
+                var y2 = 0
+                
+                triangleElm.setAttribute("points", `${x0},${y0} ${x1},${y1} ${x2},${y2}`)
+                triangleElm.setAttribute("fill", "#b4b4b4")
+                triangleElm.setAttribute("fill-opacity", 0.5)
+                triangleElm.classList.add("genomeMarkerTriangle")
+                
+                this.elm.append(triangleElm)
             })
         }
     }
