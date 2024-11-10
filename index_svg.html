@@ -4,24 +4,23 @@
 <head>
     <style>
         #screen {
-            <!-- display: flex; -->
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
             padding: 20px;
         }
 
         #mainSvg {
             overflow: visible;
+            margin-left: 200px;
         }
 
-        .sequenceRow:nth-of-type(odd) .sequenceRowBgRect{
+        .sequenceRow:nth-of-type(odd) .sequenceRowBgRect {
             fill: #eee9e9;
         }
-        .sequenceRow:nth-of-type(even) .sequenceRowBgRect{
+
+        .sequenceRow:nth-of-type(even) .sequenceRowBgRect {
             fill: none;
         }
-        .sequenceCellMatchesReference{
+
+        .sequenceCellMatchesReference {
             opacity: 0;
         }
     </style>
@@ -44,12 +43,12 @@
         return diff
     }
 
-    class PositionsRowSvg{
-        constructor(positionsArray){
+    class PositionsRowSvg {
+        constructor(positionsArray) {
             this.elm = document.createElementNS("http://www.w3.org/2000/svg", "g")
             this.elm.positions = positionsArray
 
-            positionsArray.forEach((x,i) => {
+            positionsArray.forEach((x, i) => {
                 var textElm = document.createElementNS("http://www.w3.org/2000/svg", "text")
                 var textElmContent = document.createTextNode(x)
                 textElm.setAttribute("x", (i * cellWidthPx) + (0.5 * cellWidthPx))
@@ -67,29 +66,45 @@
     }
 
     class SeqRowSvg {
-        constructor(referenceSeq, inputSeq, positionsArray, isReference) {
+        constructor(referenceSeq, inputSeq, positionsArray, seqLabel, isReference) {
             this.elm = document.createElementNS("http://www.w3.org/2000/svg", "g")
-            this.elm.variantRecs = positionsArray.map(x => [x+1, inputSeq.slice(x, x+1)])
+            this.elm.variantRecs = positionsArray.map(x => [x + 1, inputSeq.slice(x, x + 1)])
             this.isReference = isReference
 
             this.elm.classList.add("sequenceRow")
-            
-            if (this.isReference){
+
+            if (this.isReference) {
                 this.elm.classList.add("refSequenceRow")
             }
 
+            // rect for alternating grey row background
             var sequenceRowBgRectElm = document.createElementNS("http://www.w3.org/2000/svg", "rect")
             sequenceRowBgRectElm.classList.add("sequenceRowBgRect")
             sequenceRowBgRectElm.setAttribute("width", cellWidthPx * (positionsArray.length + 1))
             sequenceRowBgRectElm.setAttribute("height", cellHeightPx)
-            sequenceRowBgRectElm.setAttribute("x", 0 - (0.5*cellWidthPx))
+            sequenceRowBgRectElm.setAttribute("x", 0 - (0.5 * cellWidthPx))
 
             this.elm.append(sequenceRowBgRectElm)
 
+            // the row label
+            var rowLabelElm = document.createElementNS("http://www.w3.org/2000/svg", "text")
+            var rowLabelElmText = document.createTextNode(seqLabel)
+            rowLabelElm.append(rowLabelElmText)
+            rowLabelElm.setAttribute("fill", "black")
+            rowLabelElm.setAttribute("x", -1 * cellHeightPx)
+            rowLabelElm.setAttribute("y", 0.5 * cellHeightPx)
+            rowLabelElm.setAttribute("text-anchor", "end")
+            rowLabelElm.setAttribute("dominant-baseline", "middle")
+            rowLabelElm.setAttribute("font-family", "sans-serif")
+            rowLabelElm.classList.add("sequenceRowLabel")
+
+            this.elm.append(rowLabelElm)
+
+            // the SNPs
             this.elm.variantRecs.forEach((x, i) => {
                 var position = x[0]
                 var base = x[1]
-                var refBase = referenceSeq[position-1]
+                var refBase = referenceSeq[position - 1]
                 var isMatchReferenceBase = base == refBase
                 var groupElm = document.createElementNS("http://www.w3.org/2000/svg", "g")
                 var bgElm = document.createElementNS("http://www.w3.org/2000/svg", "rect")
@@ -97,7 +112,7 @@
                 var textNode = document.createTextNode(base)
                 var bgColour = this.isReference ? "grey" : colour_palette[base] ? colour_palette[base] : "grey"
 
-                bgElm.setAttribute("width", cellWidthPx - (2*cellBorderPx))
+                bgElm.setAttribute("width", cellWidthPx - (2 * cellBorderPx))
                 bgElm.setAttribute("height", cellHeightPx)
                 bgElm.setAttribute("x", (i * cellWidthPx) + cellBorderPx)
                 bgElm.setAttribute("y", 0)
@@ -117,7 +132,7 @@
                 groupElm.classList.add("sequenceCell")
                 groupElm.append(bgElm, textElm)
 
-                if (isMatchReferenceBase && !isReference){
+                if (isMatchReferenceBase && !isReference) {
                     groupElm.classList.add("sequenceCellMatchesReference")
                 }
 
@@ -136,22 +151,22 @@
         var parsedFasta = parseFastaToObject(testFasta)
         var reference = Object.values(parsedFasta)[0]
         var seqArray = Object.values(parsedFasta).slice(1)
-
+        var seqArrayLabels = Object.keys(parsedFasta)
 
         // compare each query seq to the reference
         var comparisonArray = seqArray.map(x => compareSeqToReference(reference, x))
 
         // collect all the unique variant positions
         var variantPositions = [...new Set(comparisonArray.flat().map(x => x[0]))]
-        variantPositions.sort((a,b) => a-b)
+        variantPositions.sort((a, b) => a - b)
 
         // create new SeqRowSvg objects for each seq
-        var refObj = new SeqRowSvg(reference, reference, variantPositions, true)
-        var seqObjs = seqArray.map(x => new SeqRowSvg(reference, x, variantPositions))
+        var refObj = new SeqRowSvg(reference, reference, variantPositions, "Reference", true)
+        var seqObjs = seqArray.map(x => new SeqRowSvg(reference, x, variantPositions, "testLabel"))
 
         // vertically translate seqRows based on index
-        refObj.elm.style.transform = `translateY(${(seqObjs.length + 2) * (cellHeightPx + cellBorderPx) - 0.5*cellHeightPx}px)`
-        seqObjs.forEach((x,i) => {
+        refObj.elm.style.transform = `translateY(${(seqObjs.length + 2) * (cellHeightPx + cellBorderPx) - 0.5 * cellHeightPx}px)`
+        seqObjs.forEach((x, i) => {
             x.elm.style.transform = `translateY(${(seqObjs.length - i) * (cellHeightPx)}px)`
         })
 
