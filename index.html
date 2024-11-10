@@ -43,6 +43,37 @@
         return diff
     }
 
+    class GenomePositionSvg{
+        constructor(positionsArray, genomeLength){
+            this.elm = document.createElementNS("http://www.w3.org/2000/svg", "g")
+            this.elm.positions = positionsArray
+
+            // background
+            var bgElm = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+            var bgElmWidth = positionsArray.length * cellWidthPx
+            bgElm.setAttribute("x", 0)
+            bgElm.setAttribute("y", 0)
+            bgElm.setAttribute("fill", "#b4b4b480")
+            bgElm.setAttribute("width", bgElmWidth)
+            bgElm.setAttribute("height", cellHeightPx)
+            this.elm.append(bgElm)
+
+            // SNPs
+            positionsArray.forEach((x, i) => {
+                var lineElm = document.createElementNS("http://www.w3.org/2000/svg", "line")
+                var genomePos = (x/genomeLength) * bgElmWidth
+                lineElm.setAttribute("x1", genomePos)
+                lineElm.setAttribute("x2", genomePos)
+                lineElm.setAttribute("y1", 0)
+                lineElm.setAttribute("y2", cellHeightPx)
+                lineElm.setAttribute("stroke", "darksalmon") // fishy
+                lineElm.setAttribute("stroke-width", 2)
+                
+                this.elm.append(lineElm)
+            })
+        }
+    }
+
     class PositionsRowSvg {
         constructor(positionsArray) {
             this.elm = document.createElementNS("http://www.w3.org/2000/svg", "g")
@@ -110,7 +141,7 @@
                 var bgElm = document.createElementNS("http://www.w3.org/2000/svg", "rect")
                 var textElm = document.createElementNS("http://www.w3.org/2000/svg", "text")
                 var textNode = document.createTextNode(base)
-                var bgColour = this.isReference ? "grey" : colour_palette[base] ? colour_palette[base] : "grey"
+                var bgColour = this.isReference ? "#b4b4b4" : colour_palette[base] ? colour_palette[base] : "grey"
 
                 bgElm.setAttribute("width", cellWidthPx - (2 * cellBorderPx))
                 bgElm.setAttribute("height", cellHeightPx)
@@ -165,7 +196,7 @@
         var seqObjs = seqArray.map((x,i) => new SeqRowSvg(reference, x, variantPositions, seqArrayLabels[i+1]))
 
         // vertically translate seqRows based on index
-        refObj.elm.style.transform = `translateY(${(seqObjs.length + 2) * (cellHeightPx + cellBorderPx) - 0.5 * cellHeightPx}px)`
+        refObj.elm.style.transform = `translateY(${(seqObjs.length + 1) * (cellHeightPx + cellBorderPx)}px)`
         seqObjs.forEach((x, i) => {
             x.elm.style.transform = `translateY(${(seqObjs.length - i) * (cellHeightPx)}px)`
         })
@@ -173,10 +204,14 @@
         // create positions row
         var posRowObjs = new PositionsRowSvg(variantPositions)
 
+        // create genome positions row
+        var genomePositionObj = new GenomePositionSvg(variantPositions, reference.length)
+        genomePositionObj.elm.style.transform = `translateY(${cellHeightPx * (seqObjs.length + 3.5)}px)`
+
         // add to DOM
         mainSvgElm.append(refObj.elm)
         mainSvgElm.append(...seqObjs.map(x => x.elm))
-        mainSvgElm.append(posRowObjs.elm)
+        mainSvgElm.append(posRowObjs.elm, genomePositionObj.elm)
     }
 
     // globals
