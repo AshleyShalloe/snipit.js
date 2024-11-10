@@ -91,6 +91,33 @@
                 
                 this.elm.append(triangleElm)
             })
+
+            // x-axis scale
+            // create markers every 5000 bases
+            for (var i=0; i<genomeLength; i+=5000){
+                var tempTextElm = document.createElementNS("http://www.w3.org/2000/svg", "text")
+                var tempTextElmText = document.createTextNode(i)
+                var relativeXPos = (i/genomeLength) * bgElmWidth
+                var lineMarkerElm = document.createElementNS("http://www.w3.org/2000/svg", "line")
+
+                tempTextElm.append(tempTextElmText)
+                tempTextElm.setAttribute("x", relativeXPos)
+                tempTextElm.setAttribute("y", cellHeightPx + 15)
+                tempTextElm.setAttribute("fill", "black")
+                tempTextElm.setAttribute("text-anchor", "middle")
+                tempTextElm.setAttribute("dominant-baseline", "middle")
+                tempTextElm.setAttribute("font-family", "sans-serif")
+                tempTextElm.setAttribute("font-size", "10pt")
+
+                lineMarkerElm.setAttribute("x1", relativeXPos)
+                lineMarkerElm.setAttribute("x2", relativeXPos)
+                lineMarkerElm.setAttribute("y1", cellHeightPx)
+                lineMarkerElm.setAttribute("y2", cellHeightPx + 5)
+                lineMarkerElm.setAttribute("stroke", "black")
+                lineMarkerElm.setAttribute("stroke-width", 1)
+
+                this.elm.append(tempTextElm, lineMarkerElm)
+            }
         }
     }
 
