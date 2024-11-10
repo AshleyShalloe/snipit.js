@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        #screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        #screenCanvas {
+            border: 1px solid white;
+            outline: 1px solid lightgray;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="screen">
+        <svg id="mainSvg"></svg>
+    </div>
+</body>
+<script>
+    'use strict'
+    function compareSeqToReference(refSeq, querySeq) {
+        // returns array of pos,ref,alt arrays
+        var diff = [...refSeq].map((x, i) => [i, x, querySeq[i]]).filter(x => x[1] != x[2])
+
+        return diff
+    }
+
+    class SeqRowSvg{
+        constructor(inputSeq, positionsArray, isReference){
+            this.variantRecs = positionsArray.map(x => [x, inputSeq.slice(x-1, x)])
+            this.elm = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+            this.isReference = isReference
+
+            this.variantRecs.forEach((x,i) => {
+                var position = x[0]
+                var base = x[1]
+                var tempElm = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+
+                tempElm.setAttribute("width", cellWidthPx)
+                tempElm.setAttribute("height", cellHeightPx)
+                tempElm.setAttribute("x", i*cellWidthPx)
+                tempElm.setAttribute("y", 0)
+                tempElm.setAttribute("fill", "red")
+                tempElm.setAttribute("stroke", "black")
+                tempElm.setAttribute("stroke-width", 3)
+
+                this.elm.appendChild(tempElm)
+            })
+        }
+    }
+
+    function doProcessSeq() {
+        var reference = "AATCGATGCTAGCTCATCTATCTA-CTAGCTGA"
+        var seqArray = [
+            "GATCGATGCTAGCACA-CTATCTAGCTAGCTGN",
+            "GCTCGCTG-TCGCACA-CTATCTAGCTAGCTGN"
+        ]
+
+
+        // compare each query seq to the reference
+        var comparisonArray = seqArray.map(x => compareSeqToReference(reference, x))
+
+        // collect all the unique variant positions
+        var variantPositions = [...new Set(comparisonArray.flat().map(x => x[0]))]
+
+        // create new SeqRowSvg objects for each seq
+        var refObj = new SeqRowSvg(reference, variantPositions, true)
+        var seqObjs = seqArray.map(x => new SeqRowSvg(x, variantPositions))
+
+        // add to DOM
+        mainSvgElm.append(refObj)
+        mainSvgElm.append(...seqObjs.map(x => x.elm))
+    }
+
+    // globals
+    var mainSvgElm = document.getElementById("mainSvg");
+    const cellWidthPx = 50
+    const cellHeightPx = 50
+    const cellBorderPx = 2
+
+    var colour_palette = { "A": "#00800080", "C": "#daa52080", "T": "#4682b480", "G": "#cd5c5c80" }
+    var colour_alpha = 0.5
+
+    // init
+    function init() {
+        doProcessSeq()
+    }
+
+    init();
+</script>
+
+</html>
