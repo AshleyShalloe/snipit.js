@@ -11,9 +11,15 @@
             padding: 20px;
         }
 
-        #screenCanvas {
-            border: 1px solid white;
-            outline: 1px solid lightgray;
+        #mainSvg {
+            overflow: visible;
+        }
+
+        .sequenceRow:nth-of-type(odd) .sequenceRowBgRect{
+            fill: #eee9e9;
+        }
+        .sequenceRow:nth-of-type(even) .sequenceRowBgRect{
+            fill: none;
         }
     </style>
 </head>
@@ -27,6 +33,7 @@
     'use strict'
     function compareSeqToReference(refSeq, querySeq) {
         // returns array of pos,ref,alt arrays
+        // 0-based positions
         var diff = [...refSeq].map((x, i) => [i, x, querySeq[i]]).filter(x => x[1] != x[2])
 
         return diff
@@ -34,34 +41,51 @@
 
     class SeqRowSvg {
         constructor(inputSeq, positionsArray, isReference) {
-            this.variantRecs = positionsArray.map(x => [x, inputSeq.slice(x - 1, x)])
-            this.elm = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+            this.elm = document.createElementNS("http://www.w3.org/2000/svg", "g")
+            this.elm.variantRecs = positionsArray.map(x => [x+1, inputSeq.slice(x, x+1)])
             this.isReference = isReference
 
-            this.variantRecs.forEach((x, i) => {
+            this.elm.classList.add("sequenceRow")
+            
+            if (this.isReference){
+                this.elm.classList.add("refSequenceRow")
+            }
+
+            var sequenceRowBgRectElm = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+            sequenceRowBgRectElm.classList.add("sequenceRowBgRect")
+            sequenceRowBgRectElm.setAttribute("width", cellWidthPx * (positionsArray.length + 1))
+            sequenceRowBgRectElm.setAttribute("height", cellHeightPx)
+            sequenceRowBgRectElm.setAttribute("x", 0 - (0.5*cellWidthPx))
+
+            this.elm.append(sequenceRowBgRectElm)
+
+            this.elm.variantRecs.forEach((x, i) => {
                 var position = x[0]
                 var base = x[1]
                 var groupElm = document.createElementNS("http://www.w3.org/2000/svg", "g")
                 var bgElm = document.createElementNS("http://www.w3.org/2000/svg", "rect")
                 var textElm = document.createElementNS("http://www.w3.org/2000/svg", "text")
                 var textNode = document.createTextNode(base)
+                var bgColour = this.isReference ? "grey" : colour_palette[base] ? colour_palette[base] : "grey"
 
-                bgElm.setAttribute("width", cellWidthPx)
+                bgElm.setAttribute("width", cellWidthPx - (2*cellBorderPx))
                 bgElm.setAttribute("height", cellHeightPx)
-                bgElm.setAttribute("x", i * cellWidthPx)
+                bgElm.setAttribute("x", (i * cellWidthPx) + cellBorderPx)
                 bgElm.setAttribute("y", 0)
-                bgElm.setAttribute("fill", "red")
-                bgElm.setAttribute("stroke", "black")
-                bgElm.setAttribute("stroke-width", 3)
+                bgElm.setAttribute("fill", bgColour)
+                //bgElm.setAttribute("stroke", "white")
+                //bgElm.setAttribute("stroke-width", 3)
+                bgElm.setAttribute("fill-opacity", colour_alpha)
 
                 textElm.setAttribute("x", (i * cellWidthPx) + (0.5 * cellWidthPx))
                 textElm.setAttribute("y", 0.5 * cellHeightPx)
                 textElm.setAttribute("fill", "black")
                 textElm.setAttribute("text-anchor", "middle")
                 textElm.setAttribute("dominant-baseline", "middle")
+                textElm.setAttribute("font-family", "sans-serif")
                 textElm.append(textNode)
 
-
+                groupElm.classList.add("sequenceCell")
                 groupElm.append(bgElm, textElm)
 
                 this.elm.appendChild(groupElm)
@@ -72,8 +96,8 @@
     function doProcessSeq() {
         var reference = "AATCGATGCTAGCTCATCTATCTA-CTAGCTGA"
         var seqArray = [
-            "GATCGATGCTAGCACA-CTATCTAGCTAGCTGN",
-            "GCTCGCTG-TCGCACA-CTATCTAGCTAGCTGN"
+            "GATTGATGCTAGCACA-CTATCTAGCTAGCTGN",
+            "GCTCGCTG-TCGCACA-CTAT-TAGCTAGCTGN"
         ]
 
 
@@ -87,18 +111,25 @@
         var refObj = new SeqRowSvg(reference, variantPositions, true)
         var seqObjs = seqArray.map(x => new SeqRowSvg(x, variantPositions))
 
+        // vertically translate seqRows based on index
+        refObj.elm.style.transform = `translateY(${(seqObjs.length + 1) * (cellHeightPx + cellBorderPx) - 0.5*cellHeightPx}px)`
+        seqObjs.forEach((x,i) => {
+            x.elm.style.transform = `translateY(${(seqObjs.length - 1- i) * (cellHeightPx)}px)`
+        })
+
+
         // add to DOM
-        mainSvgElm.append(refObj)
+        mainSvgElm.append(refObj.elm)
         mainSvgElm.append(...seqObjs.map(x => x.elm))
     }
 
     // globals
     var mainSvgElm = document.getElementById("mainSvg");
-    const cellWidthPx = 50
+    const cellWidthPx = 60
     const cellHeightPx = 50
     const cellBorderPx = 2
 
-    var colour_palette = { "A": "#00800080", "C": "#daa52080", "T": "#4682b480", "G": "#cd5c5c80" }
+    var colour_palette = { "A": "steelblue", "C": "indianred", "T": "darkseagreen", "G": "skyblue" }
     var colour_alpha = 0.5
 
     // init
