@@ -93,8 +93,8 @@
             })
 
             // x-axis scale
-            // create markers every 5000 bases
-            for (var i=0; i<genomeLength; i+=5000){
+            // create markers every n bases
+            for (var i=0; i<genomeLength; i+=genomeXAxisMarkerInterval){
                 var tempTextElm = document.createElementNS("http://www.w3.org/2000/svg", "text")
                 var tempTextElmText = document.createTextNode(i)
                 var relativeXPos = (i/genomeLength) * bgElmWidth
@@ -266,6 +266,7 @@
     const cellWidthPx = 60
     const cellHeightPx = 50
     const cellBorderPx = 2
+    const genomeXAxisMarkerInterval = 5000
 
     var colour_palette = { "A": "steelblue", "C": "indianred", "T": "darkseagreen", "G": "skyblue" }
     var colour_alpha = 0.5
