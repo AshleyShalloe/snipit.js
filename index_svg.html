@@ -32,26 +32,39 @@
         return diff
     }
 
-    class SeqRowSvg{
-        constructor(inputSeq, positionsArray, isReference){
-            this.variantRecs = positionsArray.map(x => [x, inputSeq.slice(x-1, x)])
+    class SeqRowSvg {
+        constructor(inputSeq, positionsArray, isReference) {
+            this.variantRecs = positionsArray.map(x => [x, inputSeq.slice(x - 1, x)])
             this.elm = document.createElementNS("http://www.w3.org/2000/svg", "svg")
             this.isReference = isReference
 
-            this.variantRecs.forEach((x,i) => {
+            this.variantRecs.forEach((x, i) => {
                 var position = x[0]
                 var base = x[1]
-                var tempElm = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+                var groupElm = document.createElementNS("http://www.w3.org/2000/svg", "g")
+                var bgElm = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+                var textElm = document.createElementNS("http://www.w3.org/2000/svg", "text")
+                var textNode = document.createTextNode(base)
 
-                tempElm.setAttribute("width", cellWidthPx)
-                tempElm.setAttribute("height", cellHeightPx)
-                tempElm.setAttribute("x", i*cellWidthPx)
-                tempElm.setAttribute("y", 0)
-                tempElm.setAttribute("fill", "red")
-                tempElm.setAttribute("stroke", "black")
-                tempElm.setAttribute("stroke-width", 3)
+                bgElm.setAttribute("width", cellWidthPx)
+                bgElm.setAttribute("height", cellHeightPx)
+                bgElm.setAttribute("x", i * cellWidthPx)
+                bgElm.setAttribute("y", 0)
+                bgElm.setAttribute("fill", "red")
+                bgElm.setAttribute("stroke", "black")
+                bgElm.setAttribute("stroke-width", 3)
 
-                this.elm.appendChild(tempElm)
+                textElm.setAttribute("x", (i * cellWidthPx) + (0.5 * cellWidthPx))
+                textElm.setAttribute("y", 0.5 * cellHeightPx)
+                textElm.setAttribute("fill", "black")
+                textElm.setAttribute("text-anchor", "middle")
+                textElm.setAttribute("dominant-baseline", "middle")
+                textElm.append(textNode)
+
+
+                groupElm.append(bgElm, textElm)
+
+                this.elm.appendChild(groupElm)
             })
         }
     }
