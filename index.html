@@ -2,6 +2,10 @@
 <html lang="en">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <title>snipit.js</title>
+    <link rel="icon" href="favicon.svg" />
     <style>
         #screen {
             padding: 20px;
@@ -43,8 +47,8 @@
         return diff
     }
 
-    class GenomePositionSvg{
-        constructor(positionsArray, genomeLength){
+    class GenomePositionSvg {
+        constructor(positionsArray, genomeLength) {
             this.elm = document.createElementNS("http://www.w3.org/2000/svg", "g")
             this.elm.positions = positionsArray
 
@@ -61,7 +65,7 @@
             // SNPs
             positionsArray.forEach((x, i) => {
                 var lineElm = document.createElementNS("http://www.w3.org/2000/svg", "line")
-                var genomePos = (x/genomeLength) * bgElmWidth
+                var genomePos = (x / genomeLength) * bgElmWidth
                 lineElm.setAttribute("x1", genomePos)
                 lineElm.setAttribute("x2", genomePos)
                 lineElm.setAttribute("y1", 0)
@@ -69,35 +73,35 @@
                 lineElm.setAttribute("stroke", "darksalmon") // fishy
                 lineElm.setAttribute("stroke-width", 2)
                 lineElm.classList.add("genomeMarkerLine")
-                
+
                 this.elm.append(lineElm)
             })
 
             // triangles
             positionsArray.forEach((x, i) => {
                 var triangleElm = document.createElementNS("http://www.w3.org/2000/svg", "polygon")
-                var genomePos = (x/genomeLength) * bgElmWidth
+                var genomePos = (x / genomeLength) * bgElmWidth
                 var x0 = (i * cellWidthPx) + cellBorderPx
                 var y0 = cellHeightPx * -1.25
                 var x1 = (i * cellWidthPx) + (1 * cellWidthPx) - cellBorderPx
                 var y1 = cellHeightPx * -1.25
                 var x2 = genomePos
                 var y2 = 0
-                
+
                 triangleElm.setAttribute("points", `${x0},${y0} ${x1},${y1} ${x2},${y2}`)
                 triangleElm.setAttribute("fill", "#b4b4b4")
                 triangleElm.setAttribute("fill-opacity", 0.5)
                 triangleElm.classList.add("genomeMarkerTriangle")
-                
+
                 this.elm.append(triangleElm)
             })
 
             // x-axis scale
             // create markers every n bases
-            for (var i=0; i<genomeLength; i+=genomeXAxisMarkerInterval){
+            for (var i = 0; i < genomeLength; i += genomeXAxisMarkerInterval) {
                 var tempTextElm = document.createElementNS("http://www.w3.org/2000/svg", "text")
                 var tempTextElmText = document.createTextNode(i)
-                var relativeXPos = (i/genomeLength) * bgElmWidth
+                var relativeXPos = (i / genomeLength) * bgElmWidth
                 var lineMarkerElm = document.createElementNS("http://www.w3.org/2000/svg", "line")
 
                 tempTextElm.append(tempTextElmText)
@@ -240,7 +244,7 @@
 
         // create new SeqRowSvg objects for each seq
         var refObj = new SeqRowSvg(reference, reference, variantPositions, seqArrayLabels[0], true)
-        var seqObjs = seqArray.map((x,i) => new SeqRowSvg(reference, x, variantPositions, seqArrayLabels[i+1]))
+        var seqObjs = seqArray.map((x, i) => new SeqRowSvg(reference, x, variantPositions, seqArrayLabels[i + 1]))
 
         // vertically translate seqRows based on index
         refObj.elm.style.transform = `translateY(${(seqObjs.length + 1) * (cellHeightPx + cellBorderPx)}px)`
